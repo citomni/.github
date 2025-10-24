@@ -3,15 +3,11 @@
 > The **"CitOmni"** name and logo are the exclusive property of **Lars Grove Mortensen**.
 > The CitOmni project is an independent open-source initiative, not owned or operated by any company.
 >
-> CitOmni has been in continuous public use since 2012 in connection with  
-> software frameworks, developer tools, and educational materials.  
+> CitOmni has been in continuous public use since 2012 in connection with software frameworks, developer tools, and educational materials.  
 >  
-> These marks are protected under applicable Danish and EU trademark law  
-> through long-term use ("common law trademark rights"), regardless of  
-> formal registration.  
+> These marks are protected under applicable Danish and EU trademark law through long-term use ("common law trademark rights"), regardless of formal registration.  
 >  
-> Software developers and other entities may use or build upon the CitOmni Framework  
-> under open-source licenses, but do not own or control the CitOmni name or logo.
+> Software developers and other entities may use or build upon the CitOmni Framework under open-source licenses, but do not own or control the CitOmni name or logo.
 
 
 # CitOmni Trademarks and Brand Usage
