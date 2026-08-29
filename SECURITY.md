@@ -1,121 +1,114 @@
 # Security Policy
 
-We take security seriously and value responsible disclosure. This document explains how to report vulnerabilities, how we triage, and how we communicate fixes.
+We take security seriously and value responsible disclosure. This policy explains how to report suspected security vulnerabilities affecting CitOmni projects, how reports are triaged, and how coordinated disclosure is handled.
+
+## Scope and Applicability
+
+This is CitOmni's organization-wide default security policy. It applies to repositories in the `citomni` GitHub organization that do not provide their own `SECURITY.md`. A repository-specific security policy takes precedence when present.
+
+Security reports are appropriate for vulnerabilities affecting:
+
+- CitOmni-maintained source code and packages
+- Official CitOmni release artifacts and distribution mechanisms
+- Authentication, authorization, request handling, configuration, persistence, CLI, or other framework components
+- Supply-chain paths that could compromise CitOmni packages or their consumers
 
 ## Supported Versions
 
-Security fixes target **actively maintained** release lines as listed on each repository's Releases page. Older lines may receive best-effort patches only if the fix is low-risk and widely applicable.
+Security fixes target actively maintained release lines and branches. When a repository documents supported versions, that repository-specific information is authoritative.
 
-- Runtime packages (MIT): `citomni/kernel`, `citomni/http`, `citomni/cli`, `citomni/infrastructure`
-- Proprietary org packages: `citomni/auth`, `citomni/testing` (distributed via certified resellers)
-- Docs & org meta: `citomni/docs`, `citomni/.github` (CC BY-SA 4.0)
+As a default:
 
-> Note: CitOmni has **no direct customers**; proprietary packages are delivered **only via certified resellers**.
+- The current maintained release line or branch receives priority
+- Older maintained lines may receive fixes when severity, exploitability, and backport risk justify it
+- End-of-life or otherwise unsupported versions may require upgrading to a maintained version
+
+Exact package inventories and version support can change over time, so repository-specific release information should be used when available.
 
 ## Reporting a Vulnerability
 
-Please do **not** open public issues for security problems.
+Please do **not** open a public issue, discussion, pull request, or other public report for a suspected security vulnerability before coordinated disclosure.
+
+Preferred reporting channels:
 
 - Email: **security@citomni.com**
-- Optional (preferred for sensitive details):
-  - **PGP fingerprint:** `FILL-ME-IN`
-  - **PGP key download:** https://citomni.com/security/pgp.asc
+- If the affected repository offers GitHub's **Report a vulnerability** action under Security Advisories, you may use that private reporting channel instead
 
-Include (as applicable):
-- A clear description and potential impact
-- A minimal, deterministic PoC (steps, config, payload)
-- Affected package(s), versions, environment details (PHP version, OS, web server)
-- Any logs, stack traces, or screenshots
+Include, as applicable:
 
-### If your report involves:
-- **Proprietary org packages** (`citomni/auth`, `citomni/testing`): Mention which reseller and deployment version you're testing.
-- **Secrets exposure** (tokens, keys): Redact in email; use PGP; if you must provide a live sample, minimize privileges and lifetime.
-- **Supply chain risk** (typosquatting, dependency confusion, compromised artifact): Provide IOC hashes, package names, and registry links.
+- The affected repository or package and version, release, or commit
+- A clear description of the vulnerability and potential impact
+- Minimal, deterministic reproduction steps or proof of concept
+- Relevant environment details, such as PHP version, OS, web server, and runtime mode
+- Relevant configuration details with secrets removed
+- Sanitized logs, stack traces, screenshots, or other supporting evidence
+- Any known mitigations or conditions required for exploitation
 
-## Triage & Timeline
+For exposed secrets, credentials, or tokens, revoke or rotate them first where possible. Do not send active secrets unless they are essential to the report and a secure transfer method has been agreed in advance.
+
+## Triage and Communication
 
 We aim to:
-- **Acknowledge** your report within **72 hours**
-- Provide an **initial assessment** (valid/not reproducible/out of scope) within **7 days**
-- For valid issues, propose a **mitigation plan** and indicative timeline
 
-These are goals, not guarantees; complex issues may require longer investigation.
+- **Acknowledge** a report within **72 hours**
+- Provide an **initial assessment** within **7 days**
+- Communicate meaningful status changes while a valid issue is being investigated and remediated
 
-## Severity & Scoring
+These are response goals, not guarantees. Complex issues, incomplete reports, or coordination with downstream consumers may require additional time.
 
-We use **CVSS v3.1** (and v4.0 when appropriate) to score impact and set patch priority.
+During triage, a report may be classified as valid, not reproducible, duplicate, out of scope, or requiring additional information.
 
-Indicative response targets:
-- **Critical** (e.g., RCE, auth bypass): patch or mitigation target **7-14 days**
-- **High** (e.g., privilege escalation): **14-30 days**
-- **Medium/Low**: included in the next scheduled release
+## Severity and Remediation
 
-> Where feasible, we provide **configuration-only mitigations** (e.g., tightening routes, headers, or provider maps) for immediate risk reduction.
+We use **CVSS v4.0** where practical and may also provide a **CVSS v3.1** score when required for ecosystem or tooling compatibility.
 
-## Fix Process
+CVSS is one input to prioritization. We also consider real-world exploitability, affected scope, default exposure, available mitigations, and downstream impact.
 
-1. Reproduce, scope, and root-cause the issue.
-2. Prepare patches for supported branches; add tests where possible.
-3. Verify no new regressions (unit/integration, static analysis).
-4. Coordinate with **certified resellers** if proprietary org packages are affected.
-5. Release patched versions and a security advisory.
+For valid vulnerabilities, remediation priority is based on risk. Where feasible, we may provide temporary configuration or operational mitigations before a patched release is available.
 
-### Advisories & CVEs
+## Fix and Disclosure Process
 
-- We publish a **GitHub Security Advisory (GHSA)** with CVSS score, affected versions, and remediation steps.
-- CVE IDs are requested via GitHub or the appropriate CNA when relevant.
+1. Reproduce the issue and determine root cause and affected scope.
+2. Identify affected and supported versions or branches.
+3. Prepare and verify fixes for supported targets, including regression tests where practical.
+4. Prepare remediation guidance and temporary mitigations where useful.
+5. Coordinate disclosure with the reporter and affected downstream maintainers or distributors when necessary.
+6. Release fixes before or alongside public disclosure whenever practical.
+7. Publish an advisory and request a CVE when appropriate.
+
+For public repositories where GitHub Security Advisories are available, a GHSA may be used to coordinate and publish the advisory.
 
 ## Coordinated Disclosure
 
-We support coordinated disclosure and may request a short **embargo** (typically ≤14 days for critical issues) to allow time for patches to propagate. We credit reporters by handle/name unless you prefer anonymity.
+We support coordinated disclosure. Please keep vulnerability details private until a fix or mitigation is available and disclosure timing has been coordinated.
 
-### Notification Channels
+Disclosure timing depends on severity, exploitability, fix complexity, and the time reasonably required for affected users or downstream maintainers to update. We may request a limited embargo when necessary to reduce risk while patches propagate.
 
-- Release notes and GHSA
-- Repository SECURITY.md updates (if process-relevant)
-- Direct notifications to affected resellers for proprietary packages
-
-## Scope
-
-**In scope** (examples):
-- Authentication/authorization bypasses
-- Remote code execution, injection, deserialization issues
-- Cross-site scripting (XSS), request smuggling, CSRF in CitOmni components
-- Privilege escalation via mis-validated configuration merges
-- Supply-chain vectors impacting CitOmni packages (published artifacts, tags)
-
-**Out of scope** (examples):
-- Third-party vulnerabilities in your own applications
-- Issues requiring non-default, unreasonable configurations
-- Denial-of-service from unrealistic resource exhaustion without a practical exploit
-- Vulnerabilities in dependencies already covered by their upstream advisories (we will track and bump)
-- Marketing site content, non-security typos, or broken links
+We credit reporters by name or handle unless anonymity is requested.
 
 ## Responsible Testing
 
-- Do not exfiltrate real data, escalate beyond your own resources, or affect other users.
-- Respect rate limits and legal boundaries. Use local or disposable test environments.
-- If you inadvertently access sensitive data, **stop**, document minimally, and report privately.
+- Test only against systems, data, and accounts you own or are explicitly authorized to test
+- Do not exfiltrate real data or access more data than is necessary to demonstrate the issue
+- Do not intentionally disrupt services, degrade availability, or affect other users
+- Respect rate limits and applicable legal boundaries
+- Prefer local, isolated, or disposable test environments
+- If you inadvertently access sensitive data, stop, retain only the minimum information needed to report the issue, and report it privately
 
 ## Safe Harbor
 
-We will not pursue or support legal action for **good-faith** security research that:
-- follows the guidance in this policy,
-- avoids privacy violations and service disruption,
-- and provides us a reasonable time to remediate.
+We will not pursue or support legal action for good-faith security research that:
 
-## Hardening & Best Practices
+- Follows this policy
+- Avoids privacy violations and intentional service disruption
+- Does not exploit a vulnerability beyond what is reasonably necessary to demonstrate it
+- Reports findings privately and provides a reasonable opportunity to investigate and remediate them
 
-- Keep PHP **≥ 8.2**, enable **OPcache**, avoid dynamic reflection scans.
-- Prefer deterministic provider maps and explicit routes; minimize I/O in constructors.
-- Set a strict **Content-Security-Policy** and sane default headers at the app/web-server layer.
-- In prod/stage, define `CITOMNI_PUBLIC_ROOT_URL` **or** set absolute `http.base_url` (see README).
-- Use **read-only config wrappers**; never mutate `cfg` at runtime.
+This safe harbor does not authorize testing against third-party systems or data that you do not have permission to access.
 
-## Contact & Keys
+## Contact
 
-- Security: **security@citomni.com**
-- Trademarks misuse: **trademarks@citomni.com**
-- PGP: fingerprint `FILL-ME-IN`, key: https://citomni.com/security/pgp.asc
+- Security reports: **security@citomni.com**
+- Non-security bugs and support questions: Use the relevant repository's normal issue or support channel
 
 _Thank you for helping keep the CitOmni ecosystem safe._
