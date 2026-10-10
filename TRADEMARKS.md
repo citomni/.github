@@ -107,10 +107,12 @@ Trademark rights are distinct from copyright licenses.
 
 ## 7) Changes & Precedence
 
-This policy may evolve. The latest version lives in the `citomni/.github` repository.
+This policy may evolve. The authoritative and most recent version is published at
+https://www.citomni.com/legal/trademarks/. This file mirrors it; where the two differ,
+the published version governs.
 In case of any discrepancy, this policy and the applicable NOTICE in the target repository
 govern trademark usage; open-source license texts continue to govern copyright.
 
 ---
 
-_Last updated: 2025-10-12_
+_Last updated: 2026-10-10_
