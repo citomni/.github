@@ -52,7 +52,7 @@ You **may not**, without prior written permission:
 - Modify, stylize, recolor, or merge the CitOmni logo with other marks.
 - Apply for your **own trademark** containing "CitOmni".
 
-If unsure whether your intended use requires permission, contact: **trademarks@citomni.com**.
+If unsure whether your intended use requires permission, contact: **legal@citomni.com**.
 
 ---
 
@@ -99,7 +99,7 @@ Trademark rights are distinct from copyright licenses.
 
 ## 6) Permission Requests & Misuse
 
-- Permission requests: **trademarks@citomni.com**  
+- Permission requests: **legal@citomni.com**  
   (Include who you are, intended use, where/how it will appear, and mockups if available.)
 - Suspected misuse or impersonation: **security@citomni.com**
 

@@ -1,295 +1,332 @@
-Here's the fully updated, production-ready `CONTRIBUTING.md` with the refinements we discussed, ready to drop in as the canonical version (either in `citomni/.github/CONTRIBUTING.md` or mirrored into `citomni/docs/contribute/contributing.md` if you keep a docs copy).
-
----
-
 # Contributing to CitOmni
 
-Thanks for helping make CitOmni faster, clearer, and more sustainable. This guide explains how we structure work across the organization, what we expect in code and docs, and how to land changes without surprising anyone (including future-you).
+CitOmni welcomes focused contributions to its framework packages, provider packages, application skeletons, tooling, and documentation. The objective is not merely to make code work. Changes should preserve the qualities that make CitOmni useful: **explicit behavior, deterministic execution, low overhead, clear ownership, and maintainable contracts**.
 
-CitOmni's philosophy: **explicit > magic, deterministic > accidental, performance > ornamentation.**
+This is the organization-wide contribution guide. A repository may have more specific instructions for its tests, dependencies, release process, or public API. Follow the target repository's current code and `composer.json` for implementation facts, and its local contribution instructions where present. Some older documentation may not yet reflect the current implementation.
 
----
-
-## Scope
-
-These rules apply to **all repositories** in the CitOmni organization and affiliated packages (core and providers):
-
-* Core: `citomni/kernel`, `citomni/http`, `citomni/cli`
-* First-party providers under `citomni/*`
-* Public skeletons, examples, and docs
-* Third-party providers that integrate with CitOmni (recommended)
-
-Where a repo has extra/local conventions, they must not contradict this document.
+CitOmni packages are installed as **Composer dependencies**. Do not copy framework source files into an application's `src/` tree to work around package integration issues.
 
 ---
 
-## Code of Conduct
+## Before contributing
 
-Be kind, precise, and constructive. Focus critique on code/ideas, not people. If something's unclear, ask; if something's clever, document why. For private reports (security, conduct), see **Security**.
+1. Read the target package's `README.md`, `composer.json`, and relevant source and tests. Inspect the actual public API before proposing changes to it.
+2. Reproduce the problem or establish a concrete use case. Include the relevant PHP version, runtime mode, configuration, and expected behavior when reporting a bug.
+3. Keep the proposed change focused. Fix an existing boundary before introducing an abstraction intended to hide it.
+4. For a new public API, cross-package dependency, or architectural change, open a discussion or issue when an early design decision would avoid substantial rework.
+5. Use a **private channel** for suspected vulnerabilities. Do not publish an exploit or sensitive proof of concept in an issue or pull request. See [Security](SECURITY.md).
 
----
-
-## Architecture Primer (read before changing things)
-
-CitOmni runs in exactly **two runtime modes**: **HTTP** and **CLI**. Each mode owns its **baseline** via constants in its package (e.g., `\CitOmni\Http\Boot\Config::CFG`, `\CitOmni\Http\Boot\Services::MAP`).
-
-**Merge order (per mode HTTP|CLI):**
-
-1. Mode baseline (constants in `citomni/http` or `citomni/cli`)
-2. Providers (in `/config/providers.php` order)
-3. App base config (`citomni_http_cfg.php` or `citomni_cli_cfg.php`)
-4. App env overlay (`citomni_http_cfg.{ENV}.php` or `citomni_cli_cfg.{ENV}.php`)
-
-**Artifacts:**
-
-* `$app->cfg` - deep, last-wins; associative arrays merged; lists replaced.
-* `$app->services` - ID->class map, **left-wins at each merge step**.
-
-**Providers** don't own baselines; they contribute overlays via `src/Boot/Services.php` (`CFG_HTTP/CFG_CLI`, `MAP_HTTP/MAP_CLI`, optional routes via `Boot/Routes::MAP`). **Constants-only; no runtime work in `Boot/*`.**
-
-If your change violates these invariants, it's probably in the wrong layer.
+The most helpful contributions are often small, carefully verified improvements with an explanation of why they matter.
 
 ---
 
-## Language, Runtime & Style
+## Engineering principles
 
-* **Language:** English for all docs, PHPDoc, inline comments, READMEs, commit messages.
-* **PHP:** 8.2+ only; **every PHP file MUST begin with** `declare(strict_types=1);`.
-* **Style:** PSR-1/PSR-4; **K&R braces** (opening brace on same line); **tabs** for indentation; lean SPDX header.
-* **Naming:** Classes `PascalCase`; methods/vars `camelCase`; constants `UPPER_SNAKE_CASE`.
-* **Comments:** Explain **why**, not just **what**; keep them short and near the code they justify; sanitize docs (ASCII-only where required).
+CitOmni's architectural choices serve five connected goals.
 
----
+- **Determinism.** Registration, configuration precedence, error behavior, and public contracts should be explicit and repeatable.
+- **Low overhead.** Avoid needless allocations, filesystem access, queries, network calls, and runtime discovery.
+- **High performance.** Optimize actual work and latency, with measurements where performance is material.
+- **Clear ownership.** Keep transport, orchestration, persistence, and reusable technical capabilities in their respective layers.
+- **Safe failure.** Invalid definitions, configuration mistakes, and unrecoverable failures should surface clearly rather than trigger undocumented fallbacks.
 
-## Green Coding & Performance (first-class)
-
-CitOmni aims for **low CPU time, low RAM footprint, minimal I/O**, and stable latencies. It's faster and greener, and fully compatible with our deterministic boot model (constant arrays, zero reflection/I/O during merge).
-
-### Principles
-
-* **Do less work:** Remove allocations, copies, and needless layers on hot paths.
-* **Prefer constants & caches:** Use constant arrays and OPcache-friendly precompiled caches; avoid reflection/autowiring/DI containers.
-* **Minimize I/O:** Batch DB calls, avoid N+1s, and never touch disk on hot paths; keep routes/config in constant maps.
-* **Short code paths:** Predictable branching; early returns; avoid "helper carousels".
-
-### Default budgets (per HTTP request, warm cache)
-
-(Repositories may set stricter local budgets if needed.)
-
-* Wall time (app code): ≤ **12 ms** p95
-* CPU time (user+sys): ≤ **8 ms** p95
-* RSS: ≤ **1.6 MB** p95
-* FS ops: ≤ **2** synchronous reads (excluding OPcache)
-* DB round-trips: target **1-2**; **hard cap ≤ 5** (document exceptions)
-
-### Required PR evidence (when touching hot paths)
-
-If you change boot, routing, service resolution, or model I/O, add a **Perf Note** in the PR with:
-
-* **Scenario** (e.g., "HTTP /route X with Y records")
-* **Measurements:** p50/p95 wall (ms), CPU (ms), `memory_get_usage`/peak (bytes), FS/DB counts
-* Cold vs warm notes (include first run separately)
-* What you did to reduce CPU/RAM/I/O
-
-### Measurement recipe (quick)
-
-* Use `hrtime(true)` around sections; log when `?_perf` is set (dev).
-* Log CPU ms (`getrusage` if available) and current/peak memory.
-* Take 100-500 warm iterations (local loop or wrk/ab), report p50/p95.
-* **Always measure with OPcache enabled (production-like).**
-* When relevant, run `App::warmCache()` (or the mode-specific warmer) before "warm" iterations.
-
-### DB & I/O rules
-
-* No N+1 queries; prefer `IN (...)`, simple joins, preloading.
-* Cap queries per request (see budget).
-* No disk I/O on hot paths; use **constant arrays** read once (OPcache).
-
-### PHP patterns that help
-
-* Return arrays/scalars on hot paths; minimize transient objects.
-* Prefer guard clauses and simple control flow.
-* Avoid `preg_*` / `sprintf` in tight loops if a cheaper alternative exists.
-
-### Routing & services
-
-* Router tables are **constant maps**; no dynamic building at runtime.
-* Service resolution is **ID -> class** via the map; no reflection/autowiring.
-
-### Templates & output
-
-* Keep templates light: no DB calls, no disk I/O; prepare data in controller/service.
+Prefer the shortest design that meets those goals. More classes, interfaces, and dependency layers are not automatically better architecture.
 
 ---
 
-## Providers (quick rules)
+## PHP and source conventions
 
-* `src/Boot/*` are **constants-only** (no side effects at require-time; **no I/O/env reads/function calls**).
-* Expose overlays via `src/Boot/Services.php` constants: `CFG_HTTP`, `CFG_CLI`, `MAP_HTTP`, `MAP_CLI` (+ optional `Boot/Routes::MAP` for HTTP).
-* **No** `Boot/Config.php` in providers (baselines are reserved for `citomni/http` and `citomni/cli`).
-* **Constructor contract** for services:
-  `__construct(\CitOmni\Kernel\App $app, array $options = [])` (options = scalars/arrays only).
-* Keep constructors cheap; defer I/O to first use.
-* Register provider FQCNs explicitly in **`/config/providers.php`** (array order = merge order).
+Current maintained CitOmni framework packages target **PHP 8.5 or later**. The target repository's `composer.json` is authoritative for its actual PHP and extension requirements; an older skeleton or document may still specify an obsolete requirement.
 
-**Provider repository layout (typical):**
+For CitOmni PHP code, follow these conventions.
 
-```
-/src/          PSR-4 source (see Boot/ below)
-  /Boot/       Services.php (REQUIRED), Routes.php (optional, HTTP)
-  /Service/    Provider services
-  /Model/      Provider models (if any)
-  /Controller/ HTTP controllers (if HTTP provider)
-  /Command/    CLI commands (if CLI provider)
-  /Exception/  Exceptions
-/tests/        PHPUnit tests (recommended)
-README.md
-LICENSE
-.github/workflows/ (optional)
+| Concern | Convention |
+|---|---|
+| Autoloading | Composer and PSR-4 |
+| General style | PSR-1 and established repository conventions |
+| Classes | `PascalCase` |
+| Methods and variables | `camelCase` |
+| Constants | `UPPER_SNAKE_CASE` |
+| Braces | K&R, opening brace on the declaration line |
+| Indentation | Tabs, not spaces |
+| Strict typing | `declare(strict_types=1);` immediately after `<?php` in PHP source files |
+| Documentation | English for README content, PHPDoc, inline comments, and commit messages |
+| Errors | Fail fast unless the caller has a deliberate, recoverable fallback |
+
+Use informative PHPDoc for non-trivial public behavior. Comments should explain constraints, rationale, safety requirements, and non-obvious tradeoffs rather than repeat the next line of code. Match the existing package's SPDX and copyright conventions without changing unrelated file headers.
+
+Avoid mass formatting changes in otherwise unrelated pull requests. Keep the diff reviewable.
+
+The [Coding & Documentation Conventions](https://github.com/citomni/docs/blob/main/contribute/CONVENTIONS.md) provide additional guidance. If a convention example conflicts with the current package implementation, verify the current behavior in source before using or updating it.
+
+---
+
+## Application architecture
+
+CitOmni has two delivery modes, **HTTP** and **CLI**, sharing the application core in `citomni/kernel`. Neither delivery mode should dictate the structure of transport-independent business logic.
+
+| Layer | Responsibility and boundary |
+|---|---|
+| HTTP Controllers | Parse request input, apply HTTP/session/CSRF concerns, and shape responses. No SQL or substantial business orchestration. |
+| CLI Commands | Parse arguments, format terminal output, and return exit codes. No SQL or substantial business orchestration. |
+| Operations | Coordinate non-trivial, reusable, transport-independent workflows. No SQL and no HTTP/CLI output shaping. |
+| Repositories | Own SQL and datastore persistence, including queries and storage-specific decisions. |
+| Services | Registered, App-aware reusable capabilities. No SQL embedded in ordinary services. |
+| Contracts | Small, stable public extension interfaces, not a collection of internal interfaces. |
+| Policy | App-aware rules and policy-driven decisions. |
+| State | Explicit runtime state contracts, transitions, keys, and lifetimes. |
+| Support | Focused App-aware supporting classes that do not warrant service registration. |
+| Enum | Stable, bounded sets of values. |
+| Util | Pure calculations without App, configuration, persistence, I/O, logging, or mutable runtime state. |
+| Exceptions | Transport-independent application and domain failure semantics. |
+
+Keep SQL in Repositories even when a higher-level service or Operation needs the data. An HTTP Controller may call a Repository directly for trivial CRUD; introduce an Operation when orchestration or reuse justifies the additional layer.
+
+Operations are constructed explicitly, for example with `new SomeOperation($this->app)`, rather than automatically added to the service map. Conversely, a class under `src/Service/` must be a real service registered through the application's or provider's service map.
+
+Do not introduce a new layer simply because a familiar pattern from another framework has a name for it.
+
+---
+
+## Provider and runtime registration
+
+### Provider Registry
+
+Reusable providers expose declarative contributions through `src/Boot/Registry.php`. Register provider classes explicitly in the consuming application's `config/providers.php`.
+
+The supported Registry contribution constants are:
+
+| Contribution | Purpose |
+|---|---|
+| `MAP_COMMON` | Service definitions shared by HTTP and CLI. |
+| `MAP_HTTP`, `MAP_CLI` | Mode-specific service definitions. |
+| `CFG_COMMON` | Shared configuration defaults. |
+| `CFG_HTTP`, `CFG_CLI` | Mode-specific configuration defaults. |
+| `ROUTES_HTTP` | HTTP dispatch map. |
+| `COMMANDS_CLI` | CLI command dispatch map. |
+
+Define only the constants a package actually needs. Do not replace them with legacy `Boot/Services.php`, `Boot/Config.php`, `Boot/Routes::MAP`, or CLI `ROUTES_CLI` patterns.
+
+Keep Registry definitions **side-effect-free**. No database connection, filesystem scan, network request, service construction, or environment-dependent registration should occur while the package is being loaded. Boot contributions declare data; the application runtime resolves and uses it.
+
+Services must use one of the supported definitions:
+
+```php
+'id' => \Vendor\Package\Service\ExampleService::class
 ```
 
-Providers **must not** ship app-level `/config` or runtime `/var` directories; those exist only in the consuming application.
+or:
+
+```php
+'id' => [
+	'class' => \Vendor\Package\Service\ExampleService::class,
+	'options' => ['enabled' => true],
+]
+```
+
+Registered services are created lazily as `new Service($app)` or `new Service($app, $options)` and memoized per `App`. There is no reflection-driven autowiring or fallback class discovery. Invalid definitions should fail visibly.
+
+### Composition and precedence
+
+The kernel composes each active runtime from explicit sources.
+
+**Configuration**, from lowest to highest precedence:
+
+1. HTTP or CLI vendor Registry baseline.
+2. Registered providers in order; each contributes `CFG_COMMON`, then its mode-specific configuration.
+3. Application common configuration, then HTTP- or CLI-specific configuration.
+4. Application common environment overlay, then mode-specific environment overlay.
+
+Configuration uses a recursive merge for associative arrays, with later values winning; lists are replaced. `$app->cfg` is read-only. A direct read of an unknown key throws `OutOfBoundsException`; `??` can safely handle optional nested values.
+
+**Service registrations**, from lowest to highest precedence:
+
+1. Mode-specific vendor baseline.
+2. Registered providers; their `MAP_COMMON` and mode-specific maps, with later providers able to override earlier registrations.
+3. Application `config/services.php`.
+4. Application `config/services_http.php` or `config/services_cli.php`.
+
+Service maps use keyed replacement semantics. Within each merge step, PHP array union preserves the left-hand entry; the newer layer is placed on the left. As a result, later sources override earlier service IDs.
+
+**Dispatch maps** are separate from configuration and service registration. HTTP routes use `ROUTES_HTTP` and the application's `citomni_http_routes*.php` files. CLI commands use `COMMANDS_CLI` and `citomni_cli_commands*.php`. Their entries merge with deterministic precedence from vendor through providers to app and environment overlays.
+
+Never invent configuration keys, service IDs, route shapes, or command syntax. Read the relevant package's current Registry and consumers.
+
+### Dependencies and packaging
+
+Keep each Composer package focused on capabilities it actually uses.
+
+- Require `citomni/kernel` where its App and base contracts are needed.
+- Require `citomni/http` or `citomni/cli` when the package actually depends on their classes or transport contracts, not merely because its service could be called from such an application.
+- Put reusable source under the package's PSR-4 `src/` tree. Keep application configuration, environment-specific secrets, and runtime state in the consuming application.
+- Use `citomni/installer` and package-owned scaffold manifests for application files that must be materialized outside `vendor/`. Do not silently copy runtime files during service construction.
+- Keep optional extensions and runtime limitations explicit in `composer.json` and documentation.
+
+The [Provider Skeleton](https://github.com/citomni/provider-skeleton) is the starting reference for new packages. Prefer its current Registry contract to examples in older provider documents.
 
 ---
 
-## Tooling & Local Setup
+## Green coding and performance
 
-* **Composer:** `composer dump-autoload -o` for optimized autoloading.
-* **Static analysis:** PHPStan (level **6 or higher**, unless repo specifies stricter).
-* **Tests:** PHPUnit 11+; prefer small, deterministic tests.
-* **Formatting:** tabs; no trailing spaces; no mass reformatting in unrelated PRs.
-* **Perf-smoke:** repos SHOULD include `tools/perf-smoke.php` that:
+**Green by Design is an engineering constraint, not an exemption from evidence.** A change should avoid wasting CPU time, memory, I/O, and infrastructure capacity, but environmental and performance claims must be tied to measured conditions.
 
-  * boots once (cold) then ~200 warm iterations,
-  * prints p50/p95 wall/CPU, current/peak memory, FS/DB counts,
-  * returns non-zero exit if budgets are exceeded.
+### Practical design rules
 
-Providers should depend only on what they actually need: `citomni/kernel`, and add `citomni/http` and/or `citomni/cli` only if required. Keep the surface minimal.
+- **Remove unnecessary work.** Avoid duplicate decoding, parsing, normalization, allocations, and repeated computations on hot paths.
+- **Preserve cheap application boot.** Prefer explicit constant maps, lazy service construction, and OPcache-friendly code over runtime scanning, autowiring, and reflection-driven discovery.
+- **Use compiled maps appropriately.** Configuration, services, HTTP routes, and CLI commands can be cached as PHP arrays. Avoid rebuilding unchanged maps on every request when a maintained cache is available.
+- **Minimize avoidable datastore I/O.** Avoid N+1 queries, retrieve only needed rows or columns, use parameterized SQL, and keep query planning in Repositories.
+- **Control filesystem and network work.** Reuse existing data or connections when safe and meaningful; avoid repeating unnecessary reads, writes, and remote calls.
+- **Avoid excessive abstraction.** Do not add layers, temporary arrays, wrapper objects, or generic interfaces to a tight execution path without a concrete maintenance or performance benefit.
+- **Think about memory lifetime.** Avoid holding large intermediate buffers longer than necessary; prefer streaming or bounded processing where it genuinely improves the workload.
+- **Preserve correctness and security.** Logging, input validation, atomic writes, and required checks are not wasteful merely because they incur cost.
 
----
+Performance is contextual. A database-backed task, an image encoder, and a cached HTTP route have fundamentally different resource profiles. Do **not** treat a historical minimal-page benchmark or an arbitrary millisecond, file-read, memory, or query count as an organization-wide pass/fail budget.
 
-## Branching, Commits, and PRs
+### Measuring performance-sensitive changes
 
-### Branching
+Changes to boot, routing, dispatch, service resolution, cache loading, serialization, database access, or similarly hot code paths should include a short performance note when measurement is practical.
 
-Use short, scoped prefixes:
+A useful note identifies:
 
-* `feat/<slug>` - new capability
-* `fix/<slug>` - bug fix
-* `perf/<slug>` - performance improvement
-* `refactor/<slug>` - no behavior change
-* `docs/<slug>` - documentation only
-* `chore/<slug>` - tooling/infra
+1. **Workload.** Exact operation, input size, request type, relevant dependencies, and concurrent load if applicable.
+2. **Environment.** PHP/runtime versions, platform, extension versions, OPcache configuration, and whether caches are warm.
+3. **Method.** Baseline and modified code measured under comparable conditions; cold start recorded separately from warm runs.
+4. **Measurements.** Wall time (preferably p50/p95), CPU time where available, memory usage/peak, and relevant database, filesystem, or network operations.
+5. **Interpretation.** What changed, why the tradeoff is worthwhile, and what cannot be concluded from the measurements.
 
-### Commit messages
+Use `hrtime(true)` and suitable profiling or benchmark tools, and repeat measurements enough to distinguish a regression from normal noise. Measure a representative production-like configuration when possible; development-only performance flags are diagnostic aids, not a substitute for comparable tests.
 
-* Imperative: "Add router warm cache", "Fix 503 headers".
-* Keep diffs focused; avoid drive-by cleanups.
-* Reference issues where relevant.
+If measurement is not feasible, say so plainly and explain the expected work avoided or added. A performance claim without methodology is not acceptance evidence.
 
-### Pull Request checklist
+The [historical capacity and Green-by-Design report](https://github.com/citomni/docs/blob/main/reports/2025-10-02-capacity-and-green-by-design.md) documents one older HTTP workload. It is useful background, **not** a benchmark of the current codebase or a universal resource budget.
 
-Before requesting review, verify:
+### Cache changes
 
-* [ ] PHP 8.2+, `declare(strict_types=1);` at top of every file.
-* [ ] Tabs/K&R/PSR-1/PSR-4 respected; lean SPDX header present.
-* [ ] **No side effects** in `src/Boot/*` (constants-only; no I/O/env/func calls).
-* [ ] **No reflection/autowiring or directory scans** in runtime paths.
-* [ ] **Perf Note** added for hot-path changes; budgets respected (or variance justified).
-* [ ] Config/service changes follow merge rules; migration notes included if user-visible.
-* [ ] Public IDs/keys unchanged, or treated as **breaking** with SemVer rationale (see below).
-* [ ] Tests updated/added and pass locally; static analysis passes.
-* [ ] Documentation updated (README, PHPDoc) and sanitized (ASCII where required).
+Current compiled-map paths include:
+
+```text
+var/cache/cfg.http.php       var/cache/cfg.cli.php
+var/cache/services.http.php  var/cache/services.cli.php
+var/cache/routes.http.php    var/cache/commands.cli.php
+```
+
+Update cache producers, invalidation behavior, tests, and deployment guidance together when changing map structure or semantics. Do not edit generated cache files as the source of truth. Follow the current [`citomni/cli` cache commands](https://github.com/citomni/cli/blob/main/README.md) for warming and clearing caches.
 
 ---
 
-## Backwards Compatibility & SemVer
+## Testing and verification
 
-**Public surface (ABI):**
+Use the target package's **actual test entry points**. CitOmni's current [Testing Guide](https://github.com/citomni/docs/blob/main/contribute/testing-guide.md) documents package-owned standalone PHP suites, including separate integration suites where a database is needed. Do not assume PHPUnit is required or that one test command exists identically in every historical repository.
 
-* **Service IDs** (map keys)
-* **Top-level config keys** (first-level keys under `$app->cfg->*`)
-* **Route path keys** (exact path strings in the routes map)
+Examples of commands to use **when the repository supplies them**:
 
-Changing or removing any of the above is a **MAJOR** change.
-For deprecations: introduce the new key/ID first; keep the old working with a warning on **first use**; document migration; remove in the next major.
+```bash
+composer validate
+composer test
+php tests/run.php
+```
 
----
+For changes to a specific package, check syntax and run the relevant focused and aggregate suites. Test observable behavior rather than only successful construction.
 
-## Testing Guidance
+Depending on the change, cover:
 
-Keep tests fast and deterministic; avoid filesystem/network in unit tests.
+- Success, invalid input, boundary values, and explicit error paths.
+- The active PHP version, required extensions, and optional capability fallbacks.
+- HTTP and CLI behavior separately where both are supported.
+- Provider registration, service overrides, configuration precedence, and unknown-key behavior.
+- Persistence constraints and transactional effects using disposable test data or an isolated test database.
+- Cache generation, loading, stale-cache detection, and concurrency when relevant.
+- Security cases such as missing permissions, CSRF validation, replay checks, and secret redaction where applicable.
 
-For providers, test:
+Keep fixtures small and deterministic. A test that requires network access, real credentials, a writable directory, or a database must make that dependency explicit. Never run destructive tests against production data.
 
-* Service resolution (incl. app overrides) and constructor contract.
-* Route maps (controller class/methods, metadata) and path-level overrides.
-* "No side effects on require" for `Boot/Services.php` (constants-only).
-
-See the CitOmni Testing Guide for structure and helpers.
-
----
-
-## Documentation Contributions
-
-* Update READMEs and guides together with code changes.
-* When referencing architecture/behavior, link to the canonical docs (runtime modes, provider semantics, conventions).
-* Keep examples copy-pasteable and valid PHP.
+When reporting test results, identify the exact command and environment. If a required suite could not run, distinguish **not run** from **passed**, and explain the blocker. Include regression coverage with the fix when feasible.
 
 ---
 
-## Security
+## Compatibility and changes to public contracts
 
-**Do not** open public issues for vulnerabilities.
+Treat published package behavior as an intentional contract. Changes to the following can affect applications and downstream packages:
 
-Email the maintainers at **[security@citomni.com](mailto:security@citomni.com)** (or the private address in the org profile) with:
+- Public classes, methods, arguments, return values, exceptions, and documented behavior.
+- Service IDs, constructor options, and provider Registry contributions.
+- Configuration names, defaults, precedence, and missing-key behavior.
+- HTTP routes, CLI command names, and their input/output contracts.
+- Database schemas, persistence semantics, and state transitions.
+- Cache formats and deployment lifecycle assumptions.
 
-* Clear description and minimal PoC
-* Affected packages/versions
-* Impact assessment (confidentiality/integrity/availability)
-* Suggested remediation if known
+Before changing one of these, identify affected consumers, determine whether the change is compatible with the package's supported release line, and describe migration steps when needed. Apply the repository's versioning policy and actual release status; do not automatically treat every internal refactor or every changed key as an identical SemVer event.
 
-We'll coordinate a private fix and disclosure.
-
----
-
-## Licensing
-
-* Each repo declares its license via a `LICENSE` file and SPDX headers; keep headers **short** and accurate as per Conventions.
-* Each repository declares its license via LICENSE and SPDX headers. By contributing, you agree your contribution is licensed under that repository’s LICENSE.
-* Third-party providers must declare their own licenses and ensure compatibility with CitOmni usage and trademarks.
+Prefer explicit migration guidance over silent compatibility shims or hidden fallbacks. Avoid speculative back-compat layers that do not serve a real supported consumer.
 
 ---
 
-## Getting Review
+## Documentation contributions
 
-* Small PRs get reviewed faster.
-* If your change touches core boot/merge paths or public IDs/keys, expect deeper review and possibly a short design note (a few paragraphs is fine).
-* Be responsive to feedback; if a discussion stalls, summarize options with pros/cons to move forward.
+Package READMEs should be **usable manuals** covering current capabilities, installation, configuration, public APIs, behavior, failure modes, and examples. They should not become TODO lists, changelogs, or collections of speculative features.
 
----
+- Keep documentation aligned with the implemented code and released dependencies.
+- Use English and executable or otherwise clearly illustrative examples.
+- Document meaningful defaults, optional integrations, security boundaries, and limitations.
+- Link to canonical architecture or testing references rather than repeating large sections that will drift.
+- Keep version histories, release announcements, and migration notes in appropriate release or migration documents instead of turning the README into a development diary.
+- Verify relative links and referenced repository names when editing shared documentation.
 
-## Release Notes
-
-When your change is user-visible (new service IDs, config keys, routes, CLI commands, etc.), add a concise changelog entry:
-
-* **Added/Changed/Fixed/Deprecated/Removed**
-* One-line description
-* Example config/service override if relevant
+Documentation-only contributions do not need artificial runtime tests. Validate Markdown, links, and any code examples they introduce or change.
 
 ---
 
-## FAQ
+## Pull requests and review
 
-**Q:** Can a provider define `Boot/Config.php`?
-**A:** No. Baselines live only in mode packages (`citomni/http`, `citomni/cli`). Providers contribute overlays via constants on `Boot/Services`.
+Small, focused pull requests are easier to verify and review. The [shared pull request template](PULL_REQUEST_TEMPLATE.md) provides the expected outline. Include enough context for a maintainer to reproduce and evaluate the change.
 
-**Q:** Can I use reflection/autowiring for service resolution?
-**A:** No. Use explicit **service IDs -> classes** in the map; the constructor contract is fixed for determinism.
+A useful pull request describes:
 
-**Q:** How do I override a provider service?
-**A:** Reuse the same service ID in the application’s service map overlay (e.g., **/config/services.php**). Merge is deterministic: the application layer overrides upstream (left-wins per merge step).
+- **Why:** The concrete defect, requirement, or maintenance issue.
+- **What changed:** The important code, configuration, documentation, and behavioral differences.
+- **How to test:** Commands executed, environment, results, and known omissions.
+- **Compatibility:** Public API effects, migrations, or deployment steps.
+- **Performance:** Measured changes or reasoned impact when relevant.
+- **Security and dependencies:** New privileges, secrets, network access, third-party material, or license implications.
+
+Use an imperative commit subject, such as `Fix route cache invalidation` or `Document provider configuration precedence`. Keep unrelated formatting, refactoring, and behavioral changes out of the same commit where possible.
+
+Short branch names such as `fix/<topic>`, `feat/<topic>`, `perf/<topic>`, and `docs/<topic>` are helpful but not a runtime or architectural contract.
+
+### Developer Certificate of Origin sign-off
+
+The current shared pull request template requests a **DCO sign-off** for commits. Use:
+
+```bash
+git commit -s -m "Document provider configuration precedence"
+```
+
+This adds a `Signed-off-by` trailer expressing the contributor's certification that they have the right to submit the work. It is **not** the same as cryptographic commit signing (`git commit -S`). Follow any more specific repository policy where applicable.
 
 ---
 
-**Two modes, one philosophy: explicit, deterministic, fast.** CitOmni does not guess. It knows.
+## Security, conduct, and licensing
+
+- Report suspected vulnerabilities privately through [SECURITY.md](SECURITY.md) or **security@citomni.com**, not in public issues or pull requests.
+- Remove credentials, tokens, personal data, and other secrets from examples, logs, screenshots, and reproduction archives.
+- Follow the [Code of Conduct](CODE_OF_CONDUCT.md) for technical discussion and review.
+- Contribute only material you have the right to submit. The target repository's `LICENSE` governs contributions unless a repository explicitly states a different arrangement. See [Licensing](LICENSING.md).
+- Keep copyright, third-party notices, and attribution accurate. Open-source code licensing does not grant permission to misuse CitOmni trademarks. See [Trademarks](TRADEMARKS.md).
+
+---
+
+## Reference documents
+
+- [CitOmni Architecture](https://github.com/citomni/docs/blob/main/concepts/architecture.md)
+- [Current Provider Skeleton](https://github.com/citomni/provider-skeleton)
+- [Provider Design Notes](https://github.com/citomni/docs/blob/main/concepts/services-and-providers.md) (verify examples against current Registry contracts)
+- [Testing Guide](https://github.com/citomni/docs/blob/main/contribute/testing-guide.md)
+- [Coding & Documentation Conventions](https://github.com/citomni/docs/blob/main/contribute/CONVENTIONS.md)
+- [Security Policy](SECURITY.md)
+- [Licensing Overview](LICENSING.md)
+- [Trademark Policy](TRADEMARKS.md)
+
+---
+
+CitOmni - low overhead, high performance, ready for anything.
