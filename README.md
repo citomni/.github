@@ -204,13 +204,9 @@ composer require citomni/http
 vendor/bin/citomni-installer install --environment=dev
 ```
 
-The installer materializes package-owned HTTP scaffold, including the front controller under `public/`. For a local development server:
+The installer materializes package-owned HTTP scaffold, including the front controller under `public/`.
 
-```bash
-php -S 127.0.0.1:8000 -t public
-```
-
-Point production web-server document roots at `public/`, not the application root. Select the correct environment when materializing deployed entrypoints. The [`citomni/http` manual](https://github.com/citomni/http/blob/main/README.md) covers routing, configuration, controllers, the TemplateEngine, and security features.
+Point web-server document roots at `public/`, not the application root, also in development. PHP's built-in server (`php -S`) is deliberately not supported. Select the correct environment when materializing deployed entrypoints. The [`citomni/http` manual](https://github.com/citomni/http/blob/main/README.md) covers routing, configuration, controllers, the TemplateEngine, and security features.
 
 ### Add CLI delivery
 
