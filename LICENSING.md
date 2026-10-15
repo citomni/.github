@@ -25,12 +25,12 @@ The source repository and its specific release are the unit of verification. The
 | Repository category | Verified examples | License or status |
 |---|---|---|
 | Application core and delivery | [`kernel`](https://github.com/citomni/kernel), [`http`](https://github.com/citomni/http), [`cli`](https://github.com/citomni/cli), [`infrastructure`](https://github.com/citomni/infrastructure) | MIT |
-| Reusable capability packages | [`image`](https://github.com/citomni/image), [`upload`](https://github.com/citomni/upload), [`installer`](https://github.com/citomni/installer), [`jobrunner`](https://github.com/citomni/jobrunner) | MIT |
-| AI and data integrations | [`helloai`](https://github.com/citomni/helloai), [`vectorembedding`](https://github.com/citomni/vectorembedding), [`knowledgebase`](https://github.com/citomni/knowledgebase), [`danish-public-sector-data`](https://github.com/citomni/danish-public-sector-data) | MIT |
-| Project and provider skeletons | [`app-skeleton`](https://github.com/citomni/app-skeleton), [`provider-skeleton`](https://github.com/citomni/provider-skeleton), [`http-skeleton`](https://github.com/citomni/http-skeleton) | MIT |
+| Reusable capability packages | [`image`](https://github.com/citomni/image), [`upload`](https://github.com/citomni/upload), [`pdf-viewer`](https://github.com/citomni/pdf-viewer), [`installer`](https://github.com/citomni/installer), [`jobrunner`](https://github.com/citomni/jobrunner) | MIT; the third-party assets bundled in `pdf-viewer` keep their own licenses (see [below](#third-party-dependencies-and-bundled-assets)) |
+| AI and data integrations | [`helloai`](https://github.com/citomni/helloai), [`vectorembedding`](https://github.com/citomni/vectorembedding), [`knowledgebase`](https://github.com/citomni/knowledgebase), [`mcp`](https://github.com/citomni/mcp), [`danish-public-sector-data`](https://github.com/citomni/danish-public-sector-data) | MIT |
+| Skeletons and reference packages | [`app-skeleton`](https://github.com/citomni/app-skeleton), [`provider-skeleton`](https://github.com/citomni/provider-skeleton), [`demo-provider`](https://github.com/citomni/demo-provider), [`http-skeleton`](https://github.com/citomni/http-skeleton) | MIT |
 | Dedicated documentation | [`citomni/docs`](https://github.com/citomni/docs) | Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0) |
 | Organization documentation and policies | [`citomni/.github`](https://github.com/citomni/.github) | CC BY-SA 4.0 for documentation, as stated in its `LICENSE` |
-| Uninitialized repositories | [`citomni/pdf`](https://github.com/citomni/pdf), [`citomni/pdf-viewer`](https://github.com/citomni/pdf-viewer) | No readable `LICENSE` while empty; no open-source license should be inferred |
+| Uninitialized repositories | [`citomni/pdf`](https://github.com/citomni/pdf) | No readable `LICENSE` while empty; no open-source license should be inferred |
 | Access-controlled or proprietary projects | Any non-public or separately distributed CitOmni project | Check that project's actual terms; no organization-wide default license applies |
 
 A repository name in the table does **not** certify production readiness, package publication, or ongoing support. For a current inventory, visit the [GitHub organization](https://github.com/orgs/citomni/repositories).
@@ -92,7 +92,7 @@ A CC BY-SA documentation license does not grant permission to present an unoffic
 Some applications, internal tools, and separately distributed extensions may have licensing arrangements that differ from public CitOmni packages.
 
 - Access to source code is not equivalent to permission to redistribute it.
-- Do not infer the license of `citomni/authenticate`, `citomni/devkit`, `citomni/admin`, `citomni/testing`, or any other access-controlled project from the license of `citomni/kernel` or from a past organization summary.
+- Do not infer the license of `citomni/authenticate`, `citomni/admin`, `citomni/demo-app`, `citomni/devkit`, or any other access-controlled project from the license of `citomni/kernel` or from a past organization summary.
 - Consult the project's actual `LICENSE`, distribution agreement, or written permission before use outside its authorized scope.
 - Do not describe an access-controlled package as MIT-licensed, proprietary, or distributed through a particular channel without evidence from its current terms.
 
@@ -103,6 +103,8 @@ A package can be technically compatible with the framework without sharing its l
 ## Third-party dependencies and bundled assets
 
 The repository's license covers only material that its rights holders are entitled to license. External dependencies, fonts, images, datasets, generated resources, copied snippets, and other third-party materials can carry their **own** licenses and attribution requirements.
+
+For example, `citomni/pdf-viewer` is MIT-licensed, but the unmodified PDF.js, Tesseract.js, font, and language-data files it ships under `assets/vendor/` remain under their own licenses. The package's `NOTICE` lists them, and their license files sit next to the files they cover.
 
 Before adding or redistributing third-party material:
 

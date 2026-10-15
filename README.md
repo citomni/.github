@@ -145,19 +145,22 @@ CitOmni is an ecosystem of libraries, providers, project skeletons, and supporti
 | Shared infrastructure | [`citomni/infrastructure`](https://github.com/citomni/infrastructure) | MySQL/MariaDB access, value conversion, JSONL logs, secrets, translations, outbound HTTP, email, and brute-force protection. |
 | Image processing | [`citomni/image`](https://github.com/citomni/image) | Image inspection, deterministic transformations, encoding, output verification, and captcha-image rendering. |
 | File intake and storage | [`citomni/upload`](https://github.com/citomni/upload) | Validated file intake, public/private local storage, and image outputs delegated to `citomni/image`. |
+| Document viewing | [`citomni/pdf-viewer`](https://github.com/citomni/pdf-viewer) | Sandboxed in-browser viewer for PDF, JPEG, and PNG documents, with positioned text extraction and OCR. PDF.js and Tesseract.js ship with the package and are served by the application itself. |
 | Long-running jobs | [`citomni/jobrunner`](https://github.com/citomni/jobrunner) | DB-backed jobs executed through fresh CLI processes, with job state, logs, progress, heartbeat, and cancellation. |
 | Conversational AI | [`citomni/helloai`](https://github.com/citomni/helloai) | Normalized chat requests/responses, provider adapters, profiles, and optional DB-backed caching. |
 | Vector embeddings | [`citomni/vectorembedding`](https://github.com/citomni/vectorembedding) | Normalized embedding requests/responses and provider-specific adapters. |
 | Knowledge retrieval | [`citomni/knowledgebase`](https://github.com/citomni/knowledgebase) | Document ingest, chunking, hybrid retrieval, search, and knowledge-grounded question answering. |
+| MCP server | [`citomni/mcp`](https://github.com/citomni/mcp) | MCP endpoint for AI clients over authenticated Streamable HTTP, with fixed bearer tokens or optional single-owner OAuth, exposing only the tools the application registers in cfg. |
 | Danish public data | [`citomni/danish-public-sector-data`](https://github.com/citomni/danish-public-sector-data) | Reusable clients for selected Danish public-sector registries and data sources. |
 | Scaffold lifecycle | [`citomni/installer`](https://github.com/citomni/installer) | Discovers and materializes package-owned application files, with environment selection, repair, and synchronization. |
 
-### Project starting points
+### Project starting points and reference packages
 
 | Repository | Responsibility |
 |---|---|
 | [`citomni/app-skeleton`](https://github.com/citomni/app-skeleton) | Current mode-neutral project skeleton for new HTTP, CLI, or combined applications. |
 | [`citomni/provider-skeleton`](https://github.com/citomni/provider-skeleton) | Mode-neutral starting point for new CitOmni provider packages. |
+| [`citomni/demo-provider`](https://github.com/citomni/demo-provider) | Reference provider package and guide tree: a README per folder with the rules for that kind of file, and a site notices feature that shows each layer the canonical way. |
 | [`citomni/http-skeleton`](https://github.com/citomni/http-skeleton) | Older HTTP-specific application skeleton. Its documented PHP 8.2-era setup does **not** represent the current recommended starting point. |
 
 ### Documentation, governance, and repositories in preparation
@@ -168,7 +171,7 @@ CitOmni is an ecosystem of libraries, providers, project skeletons, and supporti
 | [`citomni/.github`](https://github.com/citomni/.github) | Organization profile, shared GitHub templates, contribution policies, and security reporting. |
 | [`citomni/pdf`](https://github.com/citomni/pdf) | Public repository currently empty; **not** presented here as an installable or implemented PDF capability. |
 
-Additional access-restricted or application-specific projects can exist outside this public index. For example, internal CitOmni work may involve `citomni/authenticate`, `citomni/admin`, `citomni/devkit`, or `citomni/testing`. Their current distribution, access requirements, and licenses must be verified individually; their names here are **not** a promise of publicly accessible Composer packages.
+Additional access-restricted or application-specific projects can exist outside this public index. For example, internal CitOmni work may involve `citomni/authenticate`, `citomni/admin`, `citomni/demo-app`, or `citomni/devkit`. Their current distribution, access requirements, and licenses must be verified individually; their names here are **not** a promise of publicly accessible Composer packages.
 
 For a live inventory, use [the organization's repository list](https://github.com/orgs/citomni/repositories). For any particular dependency, its **current source, `composer.json`, README, and license** take precedence over this overview.
 

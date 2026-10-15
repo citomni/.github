@@ -129,13 +129,23 @@ body:
       description: "Select the primary CitOmni package involved."
       multiple: true
       options:
-        - citomni/http
         - citomni/kernel
+        - citomni/http
         - citomni/cli
-        - citomni/auth
         - citomni/infrastructure
-        - citomni/testing
+        - citomni/installer
+        - citomni/authenticate
         - citomni/admin
+        - citomni/image
+        - citomni/upload
+        - citomni/pdf-viewer
+        - citomni/jobrunner
+        - citomni/helloai
+        - citomni/vectorembedding
+        - citomni/knowledgebase
+        - citomni/mcp
+        - citomni/danish-public-sector-data
+        - citomni/demo-provider
         - other/unknown
     validations:
       required: true
