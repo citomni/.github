@@ -160,6 +160,7 @@ CitOmni is an ecosystem of libraries, providers, project skeletons, and supporti
 |---|---|
 | [`citomni/app-skeleton`](https://github.com/citomni/app-skeleton) | Current mode-neutral project skeleton for new HTTP, CLI, or combined applications. |
 | [`citomni/provider-skeleton`](https://github.com/citomni/provider-skeleton) | Mode-neutral starting point for new CitOmni provider packages. |
+| [`citomni/demo-app`](https://github.com/citomni/demo-app) | Runnable reference application and guide tree: a README per folder with the rules for that kind of file in application code. It installs `citomni/demo-provider` to show the host app's side. |
 | [`citomni/demo-provider`](https://github.com/citomni/demo-provider) | Reference provider package and guide tree: a README per folder with the rules for that kind of file, and a site notices feature that shows each layer the canonical way. |
 | [`citomni/http-skeleton`](https://github.com/citomni/http-skeleton) | Older HTTP-specific application skeleton. Its documented PHP 8.2-era setup does **not** represent the current recommended starting point. |
 
@@ -171,7 +172,7 @@ CitOmni is an ecosystem of libraries, providers, project skeletons, and supporti
 | [`citomni/.github`](https://github.com/citomni/.github) | Organization profile, shared GitHub templates, contribution policies, and security reporting. |
 | [`citomni/pdf`](https://github.com/citomni/pdf) | Public repository currently empty; **not** presented here as an installable or implemented PDF capability. |
 
-Additional access-restricted or application-specific projects can exist outside this public index. For example, internal CitOmni work may involve `citomni/authenticate`, `citomni/admin`, `citomni/demo-app`, or `citomni/devkit`. Their current distribution, access requirements, and licenses must be verified individually; their names here are **not** a promise of publicly accessible Composer packages.
+Additional access-restricted or application-specific projects can exist outside this public index. For example, internal CitOmni work may involve `citomni/authenticate`, `citomni/admin`, or `citomni/devkit`. Their current distribution, access requirements, and licenses must be verified individually; their names here are **not** a promise of publicly accessible Composer packages.
 
 For a live inventory, use [the organization's repository list](https://github.com/orgs/citomni/repositories). For any particular dependency, its **current source, `composer.json`, README, and license** take precedence over this overview.
 
