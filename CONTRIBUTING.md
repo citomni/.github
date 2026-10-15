@@ -137,7 +137,7 @@ The kernel composes each active runtime from explicit sources.
 3. Application common configuration, then HTTP- or CLI-specific configuration.
 4. Application common environment overlay, then mode-specific environment overlay.
 
-Configuration uses a recursive merge for associative arrays, with later values winning; lists are replaced. `$app->cfg` is read-only. A direct read of an unknown key throws `OutOfBoundsException`; `??` can safely handle optional nested values.
+Configuration uses a recursive merge for associative arrays, with later values winning; lists are replaced. `$app->cfg` is read-only. A direct read of an unknown key throws `OutOfBoundsException`. A package ships a Registry baseline (`CFG_COMMON`, `CFG_HTTP`, `CFG_CLI`) for every cfg path it reads and reads those paths directly; a missing baseline is fixed in the Registry, not with `??` or `isset()` at the call site. App cfg read by a package, another package's cfg, and a path present in one mode only are read with `?? <default>`.
 
 **Service registrations**, from lowest to highest precedence:
 

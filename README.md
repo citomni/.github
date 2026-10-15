@@ -109,7 +109,7 @@ For configuration, the effective sequence is:
 3. App common configuration, followed by mode-specific configuration.
 4. App common environment overlay, followed by the mode-specific environment overlay.
 
-Associative configuration values are merged recursively, and lists are replaced. Later configuration layers win at conflicting leaves. `$app->cfg` is a deep, read-only `Cfg` wrapper. Accessing a missing key directly throws; `??` safely handles optional nested settings.
+Associative configuration values are merged recursively, and lists are replaced. Later configuration layers win at conflicting leaves. `$app->cfg` is a deep, read-only `Cfg` wrapper. A direct read of a missing key throws `OutOfBoundsException`. Cfg that a package's Registry ships, or that the app sets in its own config files, is read directly by its owner; app cfg read by a package, another package's cfg, and a path present in one mode only are read with `?? <default>`.
 
 Service registrations use their own precedence rules. Application maps override provider registrations, provider registrations override the mode baseline, and mode-specific application services override common application services. HTTP routes and CLI commands are separate dispatch maps, not configuration subtrees.
 
