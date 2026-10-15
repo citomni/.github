@@ -3,8 +3,6 @@ description: "Report a runtime error with stack trace (no secrets, no personal d
 title: "[bug] <short summary>"
 labels:
   - bug
-  - needs-triage
-  - auto
 assignees: ["LarsGMortensen"] # e.g. ["LarsGMortensen"]
 
 body:

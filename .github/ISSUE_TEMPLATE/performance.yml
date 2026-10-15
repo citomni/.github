@@ -1,7 +1,7 @@
 name: Performance issue
 description: Report a regression or performance opportunity
 title: "[perf] <short summary>"
-labels: [performance, needs-triage]
+labels: [performance]
 assignees: ["LarsGMortensen"]
 
 body:

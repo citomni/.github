@@ -1,7 +1,7 @@
 name: Refactor / Technical debt
 description: Code quality or architectural improvements (no behavior change)
 title: "[refactor] <short summary>"
-labels: [refactor, needs-triage]
+labels: [refactor]
 assignees: ["LarsGMortensen"]
 
 body:

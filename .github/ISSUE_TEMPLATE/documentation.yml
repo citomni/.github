@@ -1,7 +1,7 @@
 name: Documentation update
 description: Improve or correct documentation
 title: "[docs] <short summary>"
-labels: [documentation, needs-triage]
+labels: [documentation]
 assignees: ["LarsGMortensen"]
 
 body:
